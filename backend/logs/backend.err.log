@@ -1,12 +1,4 @@
-INFO:     Started server process [32788]
+INFO:     Started server process [33348]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
-handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
-Traceback (most recent call last):
-  File "D:\Tools\Python3.11\Lib\asyncio\events.py", line 84, in _run
-    self._context.run(self._callback, *self._args)
-  File "D:\Tools\Python3.11\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
-    self._sock.shutdown(socket.SHUT_RDWR)
-ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。

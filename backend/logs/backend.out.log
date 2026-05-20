@@ -1,5 +1,9 @@
-INFO:     127.0.0.1:53552 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54306 - "GET /.well-known/oauth-authorization-server/mcp HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:54307 - "GET /mcp/.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:54307 - "GET /.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:54309 - "POST /mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49750 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50495 - "GET /.well-known/oauth-authorization-server/mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50495 - "GET /mcp/.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50496 - "GET /.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50497 - "POST /mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51866 - "GET /.well-known/oauth-authorization-server/mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51866 - "GET /mcp/.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51867 - "GET /.well-known/oauth-authorization-server HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51868 - "POST /mcp HTTP/1.1" 404 Not Found

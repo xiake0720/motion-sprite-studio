@@ -1,7 +1,7 @@
 services:
-  motion-sprite:
+  game-asset-studio:
     build: .
-    container_name: motion-sprite-studio
+    container_name: game-asset-studio
     restart: unless-stopped
     ports:
       - "8000:8000"

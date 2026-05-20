@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,8 +14,10 @@ from fastapi.staticfiles import StaticFiles
 from .config import ALLOWED_EXTENSIONS, JOB_DIR, MAX_FRAMES, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, UPLOAD_DIR
 from .jobs import manager
 from .processor import CropRect, ProcessOptions
+from .image_tools import IMAGE_ALLOWED, ImageCutoutOptions, safe_name as safe_image_name, run_image_cutout
+from .audio_tools import run_audio_generate
 
-app = FastAPI(title="Motion Sprite Studio", version="1.0.0")
+app = FastAPI(title="Game Asset Studio", version="1.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,7 +36,7 @@ def _safe_filename(name: str) -> str:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"ok": True, "service": "motion-sprite-studio"}
+    return {"ok": True, "service": "game-asset-studio"}
 
 
 @app.get("/api/config")
@@ -143,6 +145,115 @@ def delete_job(job_id: str):
         raise HTTPException(status_code=404, detail="任务不存在")
     shutil.rmtree(job_dir, ignore_errors=True)
     return {"ok": True}
+
+
+@app.post("/api/image/cutout")
+async def image_cutout(
+    files: list[UploadFile] = File(...),
+    mode: str = Form("auto"),
+    key_color: str = Form("#ffffff"),
+    tolerance: float = Form(34.0),
+    softness: float = Form(5.0),
+    erode: int = Form(1),
+    dilate: int = Form(0),
+    edge_protect: bool = Form(True),
+    decontaminate: float = Form(0.85),
+    close_gaps: int = Form(1),
+    trim: bool = Form(True),
+    split_assets: bool = Form(True),
+    min_area: int = Form(160),
+    padding: int = Form(6),
+    output_format: str = Form("png"),
+    sheet_columns: int = Form(6),
+    sheet_gap: int = Form(8),
+    sample_points: str = Form("[]"),
+    erase_points: str = Form("[]"),
+    keep_points: str = Form("[]"),
+    sample_radius: int = Form(3),
+    erase_radius: int = Form(28),
+    keep_radius: int = Form(28),
+    manual_strength: float = Form(1.0),
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="请上传图片")
+    temp_id = os.urandom(8).hex()
+    upload_root = UPLOAD_DIR / "images" / temp_id
+    upload_root.mkdir(parents=True, exist_ok=True)
+    uploaded: list[tuple[str, Path]] = []
+    total = 0
+    try:
+        for item in files[:80]:
+            original_name = safe_image_name(item.filename or "image.png")
+            ext = Path(original_name).suffix.lower()
+            if ext not in IMAGE_ALLOWED:
+                raise HTTPException(status_code=400, detail=f"不支持的图片格式：{ext}")
+            path = upload_root / f"{len(uploaded)+1:03d}_{original_name}"
+            with path.open("wb") as out:
+                while True:
+                    chunk = await item.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > MAX_UPLOAD_BYTES:
+                        raise HTTPException(status_code=413, detail=f"图片总大小超过限制：{MAX_UPLOAD_MB}MB")
+                    out.write(chunk)
+            uploaded.append((original_name, path))
+        options = ImageCutoutOptions(
+            mode=mode,
+            key_color=key_color,
+            tolerance=tolerance,
+            softness=softness,
+            erode=erode,
+            dilate=dilate,
+            edge_protect=edge_protect,
+            decontaminate=decontaminate,
+            close_gaps=close_gaps,
+            trim=trim,
+            split_assets=split_assets,
+            min_area=min_area,
+            padding=padding,
+            output_format=output_format,
+            sheet_columns=sheet_columns,
+            sheet_gap=sheet_gap,
+            sample_points=sample_points,
+            erase_points=erase_points,
+            keep_points=keep_points,
+            sample_radius=sample_radius,
+            erase_radius=erase_radius,
+            keep_radius=keep_radius,
+            manual_strength=manual_strength,
+        )
+        return run_image_cutout(uploaded, options)
+    finally:
+        shutil.rmtree(upload_root, ignore_errors=True)
+
+
+@app.get("/api/image/results/{result_id}/{file_path:path}")
+def image_result(result_id: str, file_path: str):
+    safe_id = Path(result_id).name
+    target = (JOB_DIR / "image" / safe_id / "outputs" / file_path).resolve()
+    base = (JOB_DIR / "image" / safe_id / "outputs").resolve()
+    if not str(target).startswith(str(base)) or not target.exists() or not target.is_file():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(target, filename=target.name)
+
+
+@app.post("/api/audio/generate")
+def audio_generate(payload: dict = Body(...)):
+    try:
+        return run_audio_generate(payload)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/audio/results/{result_id}/{file_path:path}")
+def audio_result(result_id: str, file_path: str):
+    safe_id = Path(result_id).name
+    target = (JOB_DIR / "audio" / safe_id / "outputs" / file_path).resolve()
+    base = (JOB_DIR / "audio" / safe_id / "outputs").resolve()
+    if not str(target).startswith(str(base)) or not target.exists() or not target.is_file():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(target, filename=target.name)
 
 
 # Serve built Vite frontend from Docker/production image.
