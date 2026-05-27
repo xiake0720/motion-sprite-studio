@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 from .chroma import ChromaOptions, apply_chroma_key, parse_hex_color
-from .config import MAX_DURATION_SECONDS, MAX_FRAMES, MAX_HEIGHT, MAX_WIDTH
+from .config import MAX_DURATION_SECONDS, MAX_FRAMES
 from .exporter import create_gif, create_spine_package, create_sprite_sheet, zip_directory
 
 ProgressCallback = Callable[[float, str], None]
@@ -94,10 +94,6 @@ def _sanitize_options(options: ProcessOptions, video_info: dict) -> ProcessOptio
 
     rw = max(0, int(options.resize_width or 0))
     rh = max(0, int(options.resize_height or 0))
-    if rw > MAX_WIDTH:
-        rw = MAX_WIDTH
-    if rh > MAX_HEIGHT:
-        rh = MAX_HEIGHT
 
     return ProcessOptions(
         start_time=start,
@@ -157,9 +153,6 @@ def process_video(input_path: Path, job_dir: Path, options: ProcessOptions, prog
 
     progress(0.02, "读取视频信息")
     info = probe_video(input_path)
-    if info["width"] > MAX_WIDTH or info["height"] > MAX_HEIGHT:
-        raise ValueError(f"视频分辨率过大：{info['width']}x{info['height']}，当前限制 {MAX_WIDTH}x{MAX_HEIGHT}")
-
     options = _sanitize_options(options, info)
     times = _frame_times(options.start_time, options.end_time, options.fps, options.max_frames)
     if not times:

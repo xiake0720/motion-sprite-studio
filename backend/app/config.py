@@ -13,8 +13,6 @@ MAX_UPLOAD_MB = int(os.getenv("VTS_MAX_UPLOAD_MB", "200"))
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 MAX_DURATION_SECONDS = float(os.getenv("VTS_MAX_DURATION_SECONDS", "60"))
 MAX_FRAMES = int(os.getenv("VTS_MAX_FRAMES", "120"))
-MAX_WIDTH = int(os.getenv("VTS_MAX_WIDTH", "1920"))
-MAX_HEIGHT = int(os.getenv("VTS_MAX_HEIGHT", "1080"))
 TASK_WORKERS = int(os.getenv("VTS_WORKERS", "1"))
 KEEP_ORIGINAL_UPLOAD_NAME = os.getenv("VTS_KEEP_UPLOAD_NAME", "0") == "1"
 
